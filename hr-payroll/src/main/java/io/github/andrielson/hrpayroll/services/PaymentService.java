@@ -1,30 +1,22 @@
 package io.github.andrielson.hrpayroll.services;
 
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import io.github.andrielson.hrpayroll.entities.Payment;
-import io.github.andrielson.hrpayroll.entities.Worker;
+import io.github.andrielson.hrpayroll.feignclients.WorkerFeignClient;
 
 @Service
 public class PaymentService {
 
-	private final RestTemplate restTemplate;
+	private final WorkerFeignClient workerFeignClient;
 
-	@Value("${hr-worker.host}")
-	private String workerHost;
-
-	public PaymentService(RestTemplate restTemplate) {
+	public PaymentService(WorkerFeignClient workerFeignClient) {
 		super();
-		this.restTemplate = restTemplate;
+		this.workerFeignClient = workerFeignClient;
 	}
 
 	public Payment getPayment(long workerId, int days) {
-		var uriVariables = Map.of("id", String.valueOf(workerId));
-		var worker = restTemplate.getForObject(workerHost + "/workers/{id}", Worker.class, uriVariables);
+		var worker = workerFeignClient.findById(workerId).getBody();
 		return new Payment(worker.getName(), worker.getDailyIncome(), days);
 	}
 }
